@@ -32,11 +32,11 @@ func TestKeys_EmptyStore(t *testing.T) {
 func TestSetGet_RoundTrip(t *testing.T) {
 	store := NewStore()
 	store.Set("hello", "world")
-	if v, ok := store.Get("hello"); !ok || v != "world" {
-		t.Errorf("Get() -> (%q, %t), want -> (\"world\", true)", v, ok)
+	if v, err := store.Get("hello"); err != nil || v != "world" {
+		t.Errorf("Get() -> (%q, %v), want -> (\"world\", nil)", v, err)
 	}
 
-	if v, ok := store.Get("missing"); ok || v != "" {
+	if v, err := store.Get("missing"); err == nil || v != "" {
 		t.Error("Get() failed")
 	}
 }
@@ -66,7 +66,7 @@ func TestDelete(t *testing.T) {
 			if got != want {
 				t.Errorf("after Delete(%q), len -> %d, want %d", tc.deleteKey, got, want)
 			}
-			if _, ok := store.Get(tc.deleteKey); ok {
+			if _, err := store.Get(tc.deleteKey); err == nil {
 				t.Errorf("after Delete(%q): key is still in the map", tc.deleteKey)
 			}
 		})
