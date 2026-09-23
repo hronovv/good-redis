@@ -21,6 +21,10 @@ func (s *Store) Keys() []string {
 	return keys
 }
 
+func (s *Store) Len() int {
+	return len(s.data)
+}
+
 func (s *Store) Get(key string) (string, bool) {
 	v, ok := s.data[key]
 	return v, ok

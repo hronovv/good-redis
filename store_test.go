@@ -40,3 +40,35 @@ func TestSetGet_RoundTrip(t *testing.T) {
 		t.Error("Get() failed")
 	}
 }
+
+func TestDelete(t *testing.T) {
+	tests := []struct {
+		name       string
+		data       map[string]string
+		deleteKey  string
+		wantLength int
+	}{
+		{"deletes existing key", map[string]string{"ha": "14", "b": "3"}, "ha", 1},
+		{"deletes missing key", map[string]string{"aa": "44", "b": "3"}, "ha", 2},
+		{"deletes key in empty map", map[string]string{}, "x", 0},
+		{"deletes last key", map[string]string{"ha": "14"}, "ha", 0},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			store := NewStore()
+			for k, v := range tc.data {
+				store.Set(k, v)
+			}
+			store.Delete(tc.deleteKey)
+			got := store.Len()
+			want := tc.wantLength
+			if got != want {
+				t.Errorf("after Delete(%q), len -> %d, want %d", tc.deleteKey, got, want)
+			}
+			if _, ok := store.Get(tc.deleteKey); ok {
+				t.Errorf("after Delete(%q): key is still in the map", tc.deleteKey)
+			}
+		})
+	}
+}
