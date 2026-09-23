@@ -1,12 +1,15 @@
 package main
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
 
+const bigNum = int(1 << 62)
+
 func TestKeys_ReturnAllKeysSorted(t *testing.T) {
-	store := NewStore()
+	store := NewStore(bigNum)
 
 	store.Set("neko", "smtfh")
 	store.Set("apa", "smtah")
@@ -21,7 +24,7 @@ func TestKeys_ReturnAllKeysSorted(t *testing.T) {
 }
 
 func TestKeys_EmptyStore(t *testing.T) {
-	store := NewStore()
+	store := NewStore(bigNum)
 
 	got := store.Keys()
 	if len(got) != 0 {
@@ -30,7 +33,7 @@ func TestKeys_EmptyStore(t *testing.T) {
 }
 
 func TestSetGet_RoundTrip(t *testing.T) {
-	store := NewStore()
+	store := NewStore(bigNum)
 	store.Set("hello", "world")
 	if v, err := store.Get("hello"); err != nil || v != "world" {
 		t.Errorf("Get() -> (%q, %v), want -> (\"world\", nil)", v, err)
@@ -56,7 +59,7 @@ func TestDelete(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			store := NewStore()
+			store := NewStore(bigNum)
 			for k, v := range tc.data {
 				store.Set(k, v)
 			}
@@ -70,5 +73,13 @@ func TestDelete(t *testing.T) {
 				t.Errorf("after Delete(%q): key is still in the map", tc.deleteKey)
 			}
 		})
+	}
+}
+
+func TestSetGet_EmptyKeys(t *testing.T) {
+	store := NewStore(bigNum)
+
+	if _, err := store.Get(""); err == nil || !errors.Is(err, ErrEmptyKey) {
+		t.Error("Get() failed")
 	}
 }

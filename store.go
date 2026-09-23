@@ -1,17 +1,23 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 )
 
+var ErrEmptyKey error = errors.New("Empty key is not allowed")
+var ErrSizeLimit error = errors.New("You have reached the limit of the keys")
+
 type Store struct {
-	data map[string]string
+	maxSize int
+	data    map[string]string
 }
 
-func NewStore() *Store {
+func NewStore(maxSize int) *Store {
 	return &Store{
-		data: make(map[string]string),
+		data:    make(map[string]string),
+		maxSize: maxSize,
 	}
 }
 
@@ -29,15 +35,27 @@ func (s *Store) Len() int {
 }
 
 func (s *Store) Get(key string) (string, error) {
+	if key == "" {
+		return "", ErrEmptyKey
+	}
 	v, ok := s.data[key]
 	if !ok {
-		return "", fmt.Errorf("key %s doesn't exist", key)
+		return "", fmt.Errorf("Key %s doesn't exist", key)
 	}
 	return v, nil
 }
 
-func (s *Store) Set(k, v string) {
+func (s *Store) Set(k, v string) error {
+	if k == "" {
+		return ErrEmptyKey
+	}
+
+	if _, exists := s.data[k]; s.maxSize > 0 && s.Len() >= s.maxSize && !exists {
+		return fmt.Errorf("Set(%q) -> %w", k, ErrSizeLimit)
+	}
+
 	s.data[k] = v
+	return nil
 }
 
 func (s *Store) Delete(k string) {
